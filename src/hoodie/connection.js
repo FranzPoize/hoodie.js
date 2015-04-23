@@ -17,8 +17,8 @@ var exports = module.exports = function(hoodie) {
   hoodie.isConnected = exports.isConnected.bind(null, state);
 
   // check connection when browser goes online / offline
-  global.addEventListener('online', checkConnectionSilently.bind(null, state), false);
-  global.addEventListener('offline', checkConnectionSilently.bind(null, state), false);
+  // global.addEventListener('online', checkConnectionSilently.bind(null, state), false);
+  // global.addEventListener('offline', checkConnectionSilently.bind(null, state), false);
 
   // start checking connection
   setTimeout(checkConnectionSilently.bind(null, state));
