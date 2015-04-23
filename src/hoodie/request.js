@@ -1,5 +1,6 @@
 var extend = require('extend');
 var utils = require('../utils');
+var sa = require('superagent');
 
 var hoodiefyRequestErrorName = utils.hoodiefyRequestErrorName;
 var getDefer = utils.promise.defer;
