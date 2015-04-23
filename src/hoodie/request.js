@@ -46,11 +46,13 @@ var API_PATH = '/_api';
 exports.request = function(hoodie, type, url, options) {
   var defaults = {
     type: type,
-    dataType: 'json'
+    dataType: 'json',
+    headers: {},
+    data: {},
+    contentType: 'json'
   };
   var requestDefer = getDefer();
   var requestPromise = requestDefer.promise;
-  var jQueryPromise;
   options = options || {};
 
   if (hoodie.account.bearerToken) {
@@ -74,17 +76,31 @@ exports.request = function(hoodie, type, url, options) {
 
   defaults.url = url;
 
-  // we are piping the result of the request to return a nicer
-  // error if the request cannot reach the server at all.
-  // We can't return the promise of ajax directly because of
-  // the piping, as for whatever reason the returned promise
-  // does not have the `abort` method any more, maybe others
-  // as well. See also http://bugs.jquery.com/ticket/14104
-  jQueryPromise = global.jQuery.ajax(extend(defaults, options))
-    .done(requestDefer.resolve)
-    .fail(requestDefer.reject);
+  //This is a quickfix to make hoodie work in node
+  options = extend(defaults, options)
+  var saReq = sa(options.type,url)
+    .set(options.headers)
+    .type(options.contentType)
+    .accept(options.dataType)
+    .send(options.data);
+
+  if (options.withCredentials) {
+    saReq.withCredentials();
+  }
+
+  saReq.end(function(err,res) {
+    if (res.ok) {
+      var result = res.body || res.text;
+      requestDefer.resolve(result);
+    }
+    else {
+      var result = err.response.body || err.response.text;
+      requestDefer.reject(undefined,res.status,result)
+    }
+  })
+
   var pipedPromise = requestPromise.catch(exports.handleRequestError.bind(null, hoodie));
-  pipedPromise.abort = jQueryPromise.abort;
+  pipedPromise.abort = saReq.abort;
 
   return pipedPromise;
 };
